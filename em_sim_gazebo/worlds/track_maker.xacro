@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<sdf version="1.8">
+  <model xmlns:xacro="http://ros.org/wiki/xacro" name="road_network">
+
+    <!-- Macro to define a road using AABB coordinates -->
+    <xacro:macro name="road_segment" params="name x_min y_min x_max y_max height z_position">
+      <link name="${name}">
+        <collision name="collision">
+          <geometry>
+            <box>
+              <size>
+                ${x_max - x_min} ${y_max - y_min} ${height}
+              </size>
+            </box>
+          </geometry>
+          <pose>
+            ${(x_max + x_min) / 2} ${(y_max + y_min) / 2} ${z_position} 0 0 0
+          </pose>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>
+                ${x_max - x_min} ${y_max - y_min} ${height}
+              </size>
+            </box>
+          </geometry>
+          <pose>
+            ${(x_max + x_min) / 2} ${(y_max + y_min) / 2} ${z_position} 0 0 0
+          </pose>
+          <material>
+            <ambient>0.0 0.2 1.0 1</ambient>
+            <diffuse>0.0 0.2 1.0 1</diffuse>
+            <specular>0.0 0.2 1.0 1</specular>
+          </material>
+        </visual>
+      </link>
+      <joint name="${name}_weld_joint" type="fixed">
+        <parent>world</parent>
+        <child>${name}</child>
+      </joint>
+    </xacro:macro>
+
+    <!-- Define the roads using the macro -->
+    <xacro:road_segment name="road_1" x_min="2.87" y_min="1.67" x_max="3.52" y_max="13.67"
+      height="0.1" z_position="0.05" />
+    <xacro:road_segment name="road_2" x_min="6.9" y_min="0.3" x_max="7.55" y_max="15.67"
+      height="0.1" z_position="0.05" />
+    <xacro:road_segment name="road_3" x_min="4.72" y_min="1.67" x_max="5.7" y_max="8.64"
+      height="0.1" z_position="0.05" />
+    <xacro:road_segment name="road_4" x_min="2.87" y_min="8.0" x_max="7.55" y_max="8.64"
+      height="0.1" z_position="0.05" />
+    <xacro:road_segment name="road_5" x_min="2.87" y_min="1.67" x_max="7.55" y_max="2.32"
+      height="0.1" z_position="0.05" />
+
+  </model>
+</sdf>

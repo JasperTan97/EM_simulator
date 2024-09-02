@@ -1,0 +1,237 @@
+<?xml version='1.0'?>
+<robot name="Edison">
+
+	<material name="white">
+		<color rgba="1 1 1 1" />
+	</material>
+	<material name="black">
+		<color rgba="0 0 0 1" />
+	</material>
+
+	<link name="base_link" />
+
+	<!-- ********************** ROBOT BASE *********************************  -->
+	<link name="base_center">
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<cylinder radius="0.125" length="0.11" />
+			</geometry>
+			<material name="white" />
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<cylinder radius="0.125" length="0.11" />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="3" />
+			<inertia ixx="0.0499" ixy="0.0" ixz="0.0" iyy="0.0499" iyz="0.0" izz="0.09375" />
+		</inertial>
+	</link>
+
+	<!-- ********************** RIGHT WHEEL *********************************  -->
+	<link name="right_wheel">
+		<visual>
+			<origin xyz="0 0 0" rpy="1.5707 -0 0" />
+			<geometry>
+				<cylinder radius="0.035" length="0.02" />
+			</geometry>
+			<material name="black" />
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="1.5707 0 0" />
+			<geometry>
+				<cylinder radius="0.035" length="0.02" />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.5" />
+			<inertia ixx="0.00080" ixy="0.0" ixz="0.0" iyy="0.00080" iyz="0.0" izz="0.000266" />
+		</inertial>
+	</link>
+
+	<!-- ********************** LEFT WHEEL *********************************  -->
+	<link name="left_wheel">
+		<visual>
+			<origin xyz="0 0 0" rpy="1.5707 -0 0" />
+			<geometry>
+				<cylinder radius="0.035" length="0.02" />
+			</geometry>
+			<material name="black" />
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="1.5707 0 0" />
+			<geometry>
+				<cylinder radius="0.035" length="0.02" />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.5" />
+			<inertia ixx="0.00080" ixy="0.0" ixz="0.0" iyy="0.00080" iyz="0.0" izz="0.000266" />
+		</inertial>
+	</link>
+
+
+	<!-- ********************** BALL 1 *********************************  -->
+	<link name="ball_1">
+		<visual>
+			<origin xyz="0 0 0" rpy="1.5707 -0 0" />
+			<geometry>
+				<sphere radius="0.035" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<sphere radius="0.035" />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.2" />
+			<inertia ixx="0.0000125" ixy="0.0" ixz="0.0" iyy="0.0000125" iyz="0.0" izz="0.0000125" />
+		</inertial>
+	</link>
+
+	<!-- ********************** BALL 2 *********************************  -->
+	<link name="ball_2">
+		<visual>
+			<origin xyz="0 0 0" rpy="1.5707 -0 0" />
+			<geometry>
+				<sphere radius="0.035" />
+			</geometry>
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<sphere radius="0.035" />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.2" />
+			<inertia ixx="0.0000125" ixy="0.0" ixz="0.0" iyy="0.0000125" iyz="0.0" izz="0.0000125" />
+		</inertial>
+	</link>
+
+	<!-- ********************** JOINTS *********************************  -->
+	<joint name="joint_base_link" type="fixed">
+		<parent link="base_link" />
+		<child link="base_center" />
+		<origin xyz="0 0 0.07" rpy="0 0 0" />
+	</joint>
+	<joint name="joint_wheel_left" type="fixed">
+		<parent link="base_center" />
+		<child link="left_wheel" />
+		<origin xyz="0 -0.115 -0.0425" />
+	</joint>
+	<joint name="joint_wheel_right" type="fixed">
+		<parent link="base_center" />
+		<child link="right_wheel" />
+		<origin xyz="0 0.115 -0.0425" />
+	</joint>
+
+	<joint name="joint_ball_1" type="fixed">
+		<parent link="base_center" />
+		<child link="ball_1" />
+		<origin xyz="-0.1 0 -0.0425" rpy="0 0 0" />
+	</joint>
+
+	<joint name="joint_ball_2" type="fixed">
+		<parent link="base_center" />
+		<child link="ball_2" />
+		<origin xyz="0.1 0 -0.0425" rpy="0 0 0" />
+	</joint>
+
+
+	<!-- Diff drive -->
+	<plugin
+		filename="gz-sim-diff-drive-system"
+		name="gz::sim::systems::DiffDrive">
+		<left_joint>joint_wheel_left</left_joint>
+		<right_joint>joint_wheel_right</right_joint>
+		<wheel_separation>0.23</wheel_separation>
+		<wheel_radius>0.07</wheel_radius>
+		<odom_publish_frequency>1</odom_publish_frequency>
+		<topic>cmd_vel</topic>
+	</plugin>
+
+	<!-- ********************** MARVELMIND *********************************  -->
+	<joint name="joint_marv" type="fixed">
+		<parent link="base_link" />
+		<child link="marvelmind" />
+		<origin xyz="-0.091 0 0.143" rpy="0 0 0" />
+	</joint>
+
+	<link name='marvelmind'>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<box size='0.06 0.06 0.03' />
+			</geometry>
+			<material name="black" />
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<box size='0.06 0.06 0.03' />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.1" />
+			<inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.00016" />
+		</inertial>
+	</link>
+	<!-- ********************** CAMERA *********************************  -->
+	<joint name="joint_cam" type="fixed">
+		<parent link="base_link" />
+		<child link="camera" />
+		<origin xyz="0.1 0 0.143" rpy="0 0 0" />
+	</joint>
+
+	<link name='camera'>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<box size='0.03 0.03 0.02' />
+			</geometry>
+			<material name="black" />
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<box size='0.03 0.03 0.02' />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.1" />
+			<inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.00016" />
+		</inertial>
+	</link>
+	<!-- ********************** IMU *********************************  -->
+	<joint name="joint_imu" type="fixed">
+		<parent link="base_center" />
+		<child link="imu" />
+		<origin xyz="0.05 0.058 -0.04" rpy="0 0 0" />
+	</joint>
+
+	<link name='imu'>
+		<visual>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<box size='0.0038 0.0052 0.00113' />
+			</geometry>
+			<material name="black" />
+		</visual>
+		<collision>
+			<origin xyz="0 0 0" rpy="0 0 0" />
+			<geometry>
+				<box size='0.006 0.004 0.008' />
+			</geometry>
+		</collision>
+		<inertial>
+			<mass value="0.01" />
+			<inertia ixx="0.00001" ixy="0.0" ixz="0.0" iyy="0.00001" iyz="0.0" izz="0.000016" />
+		</inertial>
+	</link>
+</robot>
