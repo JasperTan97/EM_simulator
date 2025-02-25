@@ -7,6 +7,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseArray
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import TransformStamped
+from nav_msgs.msg import Odometry
 
 class GazeboTfBroadcaster(Node):
 
@@ -15,8 +16,8 @@ class GazeboTfBroadcaster(Node):
         self.declare_parameter('robot_name', 'robot_unnamed')
         self.robot_name = self.get_parameter('robot_name').get_parameter_value().string_value
         self.subscription = self.create_subscription(
-            PoseArray,
-            f'/model/{self.robot_name}/tf',
+            Odometry,
+            f'/{self.robot_name}/pose',
             self.listener_callback,
             10
         )
@@ -29,14 +30,14 @@ class GazeboTfBroadcaster(Node):
 
         # Set header
         t.header.stamp = self.get_clock().now().to_msg()
-        t.header.frame_id = f'{self.robot_name}/odom'  # Parent frame
+        t.header.frame_id = f'world'  # Parent frame
         t.child_frame_id = f'{self.robot_name}/base_link'  # Use the robot name
 
         # Convert pose to transform
-        t.transform.translation.x = msg.poses[0].position.x
-        t.transform.translation.y = msg.poses[0].position.y
-        t.transform.translation.z = msg.poses[0].position.z
-        t.transform.rotation = msg.poses[0].orientation
+        t.transform.translation.x = msg.pose.pose.position.x
+        t.transform.translation.y = msg.pose.pose.position.y
+        t.transform.translation.z = msg.pose.pose.position.z
+        t.transform.rotation = msg.pose.pose.orientation
 
         self.br.sendTransform(t)
 

@@ -20,15 +20,23 @@ from launch.substitutions import (
 )
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
+from launch.conditions import IfCondition
 
 
 def generate_launch_description():
+
+    declare_rviz_arg = DeclareLaunchArgument(
+        'use_rviz',
+        default_value='false',  # Default is not to launch RViz
+        description='Set to "true" to launch RViz'
+    )
 
     # Setup project paths
     pkg_project_bringup = get_package_share_directory("em_sim_bringup")
     pkg_project_gazebo = get_package_share_directory("em_sim_gazebo")
     pkg_project_description = get_package_share_directory("em_sim_description")
     pkg_ros_gz_sim = get_package_share_directory("ros_gz_sim")
+    pkg_em_vehicle_control = get_package_share_directory("em_vehicle_control")
 
     # read config
     yaml_file = os.path.join(pkg_project_bringup, "config", "bringup.yaml")
@@ -110,7 +118,7 @@ def generate_launch_description():
             name="ros_gz_bridge_tf",
             namespace=robot_name,
             arguments=[
-                f"/model/{robot_name}/tf@geometry_msgs/msg/PoseArray@gz.msgs.Pose_V"
+                f"/{robot_name}/pose@nav_msgs/msg/Odometry@gz.msgs.Odometry"
             ],
             output="screen",
         )
@@ -128,28 +136,29 @@ def generate_launch_description():
         robot_nodes.append(odom_base_link_tf_broadcaster)
 
         # Static tf broadcaster for world to odom frame of each robot
-        static_tf = Node(
-            package="tf2_ros",
-            executable="static_transform_publisher",
-            name="static_transform_publisher",
-            arguments=[
-                str(config["poses"][i][0]),  # x
-                str(config["poses"][i][1]),  # y
-                "0",  # z
-                str(config["poses"][i][2]),  # y
-                "0",  # p
-                "0",  # r
-                "world",  # parent
-                f"{robot_name}/odom",  # child
-            ],
-        )
-        robot_nodes.append(static_tf)
+        # static_tf = Node(
+        #     package="tf2_ros",
+        #     executable="static_transform_publisher",
+        #     name="static_transform_publisher",
+        #     namespace=robot_name,
+        #     arguments=[
+        #         str(config["poses"][i][0]),  # x
+        #         str(config["poses"][i][1]),  # y
+        #         "0",  # z
+        #         str(config["poses"][i][2]),  # y
+        #         "0",  # p
+        #         "0",  # r
+        #         "world",  # parent
+        #         f"{robot_name}/odom",  # child
+        #     ],
+        # )
+        # robot_nodes.append(static_tf)
 
         # Start ros2 to gazebo bridge for twist message transfer
         cmd_vel_bridge = Node(
             package="ros_gz_bridge",
             executable="parameter_bridge",
-            name="ros_gz_bridge_tf",
+            name="ros_gz_bridge_cmd_vel",
             namespace=robot_name,
             arguments=[
                 f"/{robot_name}/cmd_vel@geometry_msgs/msg/Twist@gz.msgs.Twist"
@@ -158,6 +167,20 @@ def generate_launch_description():
         )
         robot_nodes.append(cmd_vel_bridge)
 
+        # start tracking node
+        tracker = Node(
+            package="em_vehicle_control",
+            executable='tracker',
+            name='pathtracker',
+            namespace=robot_name,
+            parameters=[{
+                "robot_name":robot_name
+            }],
+            output='screen',
+            prefix=["taskset -c ", str(i % os.cpu_count())]
+        )
+        robot_nodes.append(tracker)
+
     # Publishes gazebo map as an occupancy grid for rviz
     pub_road_network = Node(
             package='em_sim_gazebo',
@@ -165,9 +188,27 @@ def generate_launch_description():
             name='sdf_to_occupancy_grid_node',
             output='screen'
         )
+    
+    # start path planning node
+    path_planner = Node(
+        package='em_vehicle_control',
+        executable='planner',
+        name='path_planner_node',
+        output='screen'
+    )
+
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        output='screen',
+        arguments=['-d', PathJoinSubstitution([pkg_project_bringup, 'rviz', 'config.rviz2'])],
+        condition=IfCondition(LaunchConfiguration('use_rviz'))
+    )
 
     ld = LaunchDescription(
         [
+            declare_rviz_arg,
             SetEnvironmentVariable(
                 name="IGN_GAZEBO_RESOURCE_PATH",
                 value=PathJoinSubstitution([pkg_project_gazebo, "worlds"]),
@@ -175,6 +216,8 @@ def generate_launch_description():
             gz_sim,
             *robot_nodes,
             pub_road_network,
+            path_planner,
+            rviz_node
         ]
     )
 

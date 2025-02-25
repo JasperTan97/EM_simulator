@@ -125,16 +125,16 @@
     <joint name="joint_wheel_left" type="continuous">
         <parent link="base_center" />
         <child link="left_wheel" />
-        <origin xyz="0 -0.115 -0.0425" />
+        <origin xyz="0 0.115 -0.0425" />
         <axis xyz="0 1 0"/>
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="10.0"/>
     </joint>
     <joint name="joint_wheel_right" type="continuous">
         <parent link="base_center" />
         <child link="right_wheel" />
-        <origin xyz="0 0.115 -0.0425" />
+        <origin xyz="0 -0.115 -0.0425" />
         <axis xyz="0 1 0"/>
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="10.0"/>
     </joint>
 
     <joint name="joint_ball_1" type="fixed">
@@ -149,6 +149,10 @@
         <origin xyz="0.1 0 -0.0425" rpy="0 0 0" />
     </joint>
 
+    <frame name="base_link" attached_to='base_center'>
+        <pose>0 0 0 0 0 0</pose>
+    </frame>
+
     <gazebo>
         <!-- Diff drive -->
         <plugin
@@ -158,8 +162,15 @@
             <right_joint>joint_wheel_right</right_joint>
             <wheel_separation>0.23</wheel_separation>
             <wheel_radius>0.035</wheel_radius>
-            <odom_publish_frequency>1</odom_publish_frequency>
+            <odom_publish_frequency>100</odom_publish_frequency>
             <topic>$(arg robotNamespace)/cmd_vel</topic>
+        </plugin>
+        <plugin
+            filename="libignition-gazebo-odometry-publisher-system.so"
+            name="ignition::gazebo::systems::OdometryPublisher">
+            <odom_frame>world</odom_frame>
+            <robot_base_frame>$(arg robotNamespace)/base_link</robot_base_frame>
+            <odom_topic>$(arg robotNamespace)/pose</odom_topic>
         </plugin>
     </gazebo>
 </robot>
